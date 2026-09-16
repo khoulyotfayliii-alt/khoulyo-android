@@ -1,0 +1,36 @@
+name: Build Khoulyo APK
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Extract project
+        run: |
+          unzip -q KhoulyoAndroid-FINAL.zip -d project
+          find project -name gradlew -exec chmod +x {} \;
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Setup Android
+        uses: android-actions/setup-android@v3
+
+      - name: Build APK
+        run: |
+          cd "$(dirname "$(find project -name gradlew | head -1)")"
+          ./gradlew assembleDebug
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: Khoulyo-APK
+          path: project/**/build/outputs/apk/debug/*.apk
