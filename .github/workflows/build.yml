@@ -13,7 +13,14 @@ jobs:
       - name: Extract project
         run: |
           unzip -q KhoulyoAndroid-FINAL.zip -d project
-          find project -name gradlew -exec chmod +x {} \;
+          GRADLEW=$(find project -type f -name gradlew | head -1)
+          if [ -z "$GRADLEW" ]; then
+            echo "gradlew not found"
+            find project -maxdepth 3 -type f | head -100
+            exit 1
+          fi
+          chmod +x "$GRADLEW"
+          echo "GRADLEW=$GRADLEW" >> "$GITHUB_ENV"
 
       - name: Setup Java
         uses: actions/setup-java@v4
@@ -23,12 +30,10 @@ jobs:
 
       - name: Setup Android
         uses: android-actions/setup-android@v3
-        with:
-          packages: 'platform-tools'
 
       - name: Build APK
         run: |
-          cd "$(dirname "$(find project -name gradlew | head -1)")"
+          cd "$(dirname "$GRADLEW")"
           ./gradlew assembleDebug
 
       - name: Upload APK
